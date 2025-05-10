@@ -18,20 +18,43 @@ const App = () => {
     setLoading(false)
   }
 
-  const handleSpeechInput = () => {
-    const recognition = new window.webkitSpeechRecognition()
-    recognition.lang = "ru-RU"
-    recognition.onstart = () => setListening(true)
-    recognition.onend = () => setListening(false)
-    recognition.onresult = (event) => {
-      setInput(event.results[0][0].transcript)
-    }
-    recognition.start()
+ const handleSpeechInput = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Ваш браузер не поддерживает голосовой ввод");
+    return;
   }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "ru-RU";
+  recognition.interimResults = false; 
+  recognition.maxAlternatives = 2;
+
+  recognition.onstart = () => {
+    setListening(true);
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setInput(prev => `${prev} ${transcript}`);
+  };
+
+  recognition.onerror = (event) => {
+    setListening(false);
+  };
+
+  recognition.onend = () => {
+    setListening(false);
+  };
+
+  recognition.start();
+};
+
 
   return (
     <div className="h-screen w-full bg-neutral-100 flex flex-col items-center justify-between p-6">
-<div className="w-full max-w-2xl flex-1 overflow-y-auto space-y-4 p-2 break-words max-h-[85vh]">
+      <div className="max-w-4xl flex-1 overflow-y-auto space-y-4 p-2 break-words max-h-[85vh]">
         <AnimatePresence>
           {messages.map((message, idx) => (
             <motion.div
